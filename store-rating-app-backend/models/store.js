@@ -3,6 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
+  
   class Store extends Model {
     /**
      * Helper method for defining associations.
@@ -10,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Store.belongsTo(models.User, { foreignKey: 'ownerId', as: 'owner' });
     }
   }
   Store.init({
@@ -26,6 +27,7 @@ module.exports = (sequelize, DataTypes) => {
   Store.belongsTo(models.User, { foreignKey: 'ownerId' });
   Store.hasMany(models.Rating, { foreignKey: 'storeId' });
 };
+
   return Store;
 };
 

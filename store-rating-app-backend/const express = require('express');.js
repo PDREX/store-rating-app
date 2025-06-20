@@ -4,8 +4,8 @@ const { sequelize } = require('./models');
 
 // Routes
 const authRoutes = require('./routes/auth');
-const storeRoutes = require('./routes/store');
-const ratingRoutes = require('./routes/rating');
+const storeRoutes = require('./routes/stores');
+const ratingRoutes = require('./routes/ratings');
 const adminRoutes = require('./routes/admin');
 
 const app = express();

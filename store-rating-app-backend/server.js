@@ -1,37 +1,60 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
-const { sequelize } = require('./models');
+require('dotenv').config();
 
-// Routes
-const authRoutes = require('./routes/auth');
-const storeRoutes = require('./routes/store');
-const ratingRoutes = require('./routes/rating');
-const adminRoutes = require('./routes/admin');
-
+const { sequelize, Store } = require('./models');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to SQLite database
-sequelize.authenticate()
-  .then(() => console.log('✅ Database connected'))
-  .catch((err) => console.error('❌ DB connection error:', err));
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/stores', require('./routes/storeRoutes')); // ✅ single clean route
+app.use('/api/ratings', require('./routes/ratings'));
+app.use('/api/admin', require('./routes/admin'));
 
-// Base route
+// Health check
 app.get('/', (req, res) => {
-  res.send('🟢 Store Rating API is running');
+  res.send('✅ Store Rating App API is running');
 });
 
-// Register route files
-app.use('/api/auth', authRoutes);
-app.use('/api/stores', storeRoutes);
-app.use('/api/ratings', ratingRoutes);
-app.use('/api/admin', adminRoutes);
+// 404
+app.use((req, res) => {
+  res.status(404).json({ message: '❌ Endpoint not found' });
+});
+
+// Global Error
+app.use((err, req, res, next) => {
+  console.error('Unexpected error:', err);
+  res.status(500).json({ message: 'Internal server error' });
+});
+
+// Seed
+async function seedStores() {
+  const count = await Store.count();
+  if (count === 0) {
+    console.log('Seeding stores...');
+    await Store.bulkCreate([
+      { name: 'Tech Haven', address: '123 Silicon Ave' },
+      { name: 'Gadget Galaxy', address: '456 Circuit St' },
+      { name: 'Book Nook', address: '789 Paper Rd' },
+      { name: 'Fashion Forward', address: '321 Style Blvd' },
+    ]);
+    console.log('✅ Seed complete');
+  }
+}
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server started on http://localhost:${PORT}`);
+sequelize.sync({ force: false }).then(async () => {
+  console.log('✅ DB synced');
+  await seedStores();
+  app.listen(PORT, () => {
+    console.log(`✅ Server running: http://localhost:${PORT}`);
+  });
+}).catch(err => {
+  console.error('❌ DB sync error:', err);
 });
